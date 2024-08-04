@@ -50,8 +50,28 @@ def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_nam
                 x = margin + (j % 2) * image_width
                 y = height - margin - (j // 2 + 1) * image_height
                 c.drawImage(frame_path, x, y, image_width, image_height)
+
+                # Draw a circle behind the text to ensure readability
+                text_x = x
+                text_y = y + image_height - 15
+                text = f"{i + j + 1}"
+                
+                text_width = c.stringWidth(text, "Helvetica", 10)
+                text_height = 10
+                
+                # Calculate the center of the circle
+                circle_center_x = (text_x + text_width / 2) + 10
+                circle_center_y = text_y - text_height / 2
+                circle_radius = max(text_width, text_height) / 2 + 3
+                
+                c.setFillColorRGB(1, 1, 1)  # White background for text
+                c.circle(circle_center_x, circle_center_y, circle_radius, fill=1, stroke=0)
+                
+                c.setFillColorRGB(0, 0, 0)  # Black text color
                 c.setFont("Helvetica", 10)
-                c.drawString(x, y + image_height + 5, f"Frame: {i + j + 1}")
+                c.drawString(text_x + 10, text_y - 8, text)
+                
+                # Draw a rectangle to separate frames
                 c.setDash(1, 2)
                 c.rect(x, y, image_width, image_height)
         c.showPage()
@@ -86,26 +106,27 @@ def generate_flipbook():
 
 # GUI
 root = tk.Tk()
-root.title("Video to Flipbook Converter")
+root.title("Video to Flipbook Converter By Divesh Adivarekar")
+root.resizable(False, False) 
 
 video_path_var = tk.StringVar()
 output_folder_var = tk.StringVar()
-frame_rate_var = tk.StringVar(value="10")
+frame_rate_var = tk.StringVar(value="1")
 frames_per_page_var = tk.StringVar(value="10")
 
 tk.Label(root, text="Video File:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=video_path_var, width=50).grid(row=0, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_video).grid(row=0, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Output Folder:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Label(root, text="Output Folder (preferably empty folder):").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=output_folder_var, width=50).grid(row=1, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=5, pady=5)
 
 tk.Label(root, text="Frame Rate (frames per second):").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=frame_rate_var).grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="Frames per Page:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=frames_per_page_var).grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+tk.Label(root, text="Frames per Page  (Max 10):").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Spinbox(root, from_=1, to=10, textvariable=frames_per_page_var).grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
 
 generate_button = tk.Button(root, text="Generate Flipbook", command=generate_flipbook)
 generate_button.grid(row=5, column=0, columnspan=3, pady=10)
