@@ -21,7 +21,7 @@ def extract_frames(video_path, output_folder, frame_rate=1):
         count += 1
 
     vidcap.release()
-    print(f"Extracted {count} frames.")
+    # print(f"Extracted {count} frames.")
     return count
 
 def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_name="", total_frames=0):
@@ -77,7 +77,12 @@ def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_nam
         c.showPage()
     
     c.save()
-    print(f"PDF saved as {pdf_path}")
+    # print(f"PDF saved as {pdf_path}")
+
+def delete_images(folder):
+    for f in os.listdir(folder):
+        if f.endswith('.jpg'):
+            os.remove(os.path.join(folder, f))
 
 def browse_video():
     file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mov")])
@@ -101,6 +106,9 @@ def generate_flipbook():
     
     total_frames = extract_frames(video_path, output_folder, frame_rate)
     create_pdf_from_frames(output_folder, pdf_path, frames_per_page, video_name=video_file_name_without_ext, total_frames=total_frames)
+
+    # Delete the images after creating the PDF
+    delete_images(output_folder)
     
     messagebox.showinfo("Success", f"Flipbook PDF created: {pdf_path}")
 
