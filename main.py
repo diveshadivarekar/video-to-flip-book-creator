@@ -114,8 +114,9 @@ def generate_flipbook():
 
 # GUI
 root = tk.Tk()
-root.title("Video to Flipbook Converter By Divesh Adivarekar")
+root.title("Video to Flipbook Converter")
 root.resizable(False, False) 
+root.iconbitmap('assets/icon.ico')
 
 video_path_var = tk.StringVar()
 output_folder_var = tk.StringVar()
@@ -123,11 +124,11 @@ frame_rate_var = tk.StringVar(value="1")
 frames_per_page_var = tk.StringVar(value="10")
 
 tk.Label(root, text="Video File:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=video_path_var, width=50).grid(row=0, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=video_path_var, width=25).grid(row=0, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_video).grid(row=0, column=2, padx=5, pady=5)
 
 tk.Label(root, text="Output Folder (preferably empty folder):").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=output_folder_var, width=50).grid(row=1, column=1, padx=5, pady=5)
+tk.Entry(root, textvariable=output_folder_var, width=25).grid(row=1, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=5, pady=5)
 
 tk.Label(root, text="Frame Rate (frames per second):").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -144,7 +145,7 @@ tooltip = ttk.Label(root, text="It may take time to create", background="yellow"
 tooltip.grid_forget()  # Initially hide the tooltip
 
 def show_tooltip(event):
-    tooltip.grid(row=3, column=0, columnspan=3, pady=10)
+    tooltip.grid(row=3, column=0, columnspan=3, pady=5)
 
 def hide_tooltip(event):
     tooltip.grid_forget()
