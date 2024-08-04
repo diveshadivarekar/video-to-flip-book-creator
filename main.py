@@ -1,10 +1,12 @@
 import cv2
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+
 
 def extract_frames(video_path, output_folder, frame_rate=1):
     if not os.path.exists(output_folder):
@@ -112,11 +114,32 @@ def generate_flipbook():
     
     messagebox.showinfo("Success", f"Flipbook PDF created: {pdf_path}")
 
+# Get the application directory
+def resource_path(relative_path):
+    """ Get the absolute path to the resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # GUI
 root = tk.Tk()
 root.title("Video to Flipbook Converter")
 root.resizable(False, False) 
-root.iconbitmap('assets/icon.ico')
+
+try:
+    icon_path = resource_path('icon.ico')
+    root.iconbitmap(icon_path)
+except Exception:
+    pass
+
+try:
+    root.iconbitmap("assets/icon.ico")
+except Exception:
+    pass
 
 video_path_var = tk.StringVar()
 output_folder_var = tk.StringVar()
