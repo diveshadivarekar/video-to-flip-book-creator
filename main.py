@@ -127,7 +127,7 @@ def resource_path(relative_path):
 
 # GUI
 root = tk.Tk()
-root.title("Video to Flipbook Converter")
+root.title("Video to Flipbook Creator")
 root.resizable(False, False) 
 
 try:
