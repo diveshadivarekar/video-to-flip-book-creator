@@ -6,6 +6,7 @@ from tkinter import filedialog, messagebox, ttk
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+from datetime import datetime
 
 
 def extract_frames(video_path, output_folder, frame_rate=1, progress_var=None):
@@ -40,12 +41,16 @@ def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_nam
     frames = [f for f in os.listdir(frame_folder) if f.endswith('.jpg')]
     frames.sort()
 
+    # Add creation date and time to the first frame
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     c.setFont("Helvetica", 14)
     c.drawString(margin, height - margin - 20, "Video to Flipbook Creator")
     c.drawString(margin, height - margin - 40, "Developed by Divesh Adivarekar")
     c.drawString(margin, height - margin - 60, "https://diveshadivarekar.github.io/")
     c.drawString(margin, height - margin - 100, f"Flipbook for Video: {video_name}")
-    c.drawString(margin, height - margin - 140, f"Total Frames: {total_frames}")
+    c.drawString(margin, height - margin - 120, f"Total Frames: {total_frames}")
+    c.drawString(margin, height - margin - 140, f"Created on: {current_datetime}")
     c.showPage()
     
     for i in range(0, len(frames), frames_per_page):
@@ -103,7 +108,14 @@ def generate_flipbook():
     frame_rate = int(frame_rate_var.get())
     frames_per_page = int(frames_per_page_var.get())
     add_space = add_space_var.get()
-    pdf_path = os.path.join(output_folder, f"flipbook for [{video_file_name_without_ext}].pdf")
+
+    # Increment file name if it already exists
+    pdf_base_path = os.path.join(output_folder, f"flipbook for [{video_file_name_without_ext}]")
+    pdf_path = f"{pdf_base_path}.pdf"
+    count = 1
+    while os.path.exists(pdf_path):
+        pdf_path = f"{pdf_base_path}_{count}.pdf"
+        count += 1
     
     if not video_path or not output_folder:
         messagebox.showerror("Error", "Please select both a video file and an output folder.")
@@ -167,7 +179,7 @@ tk.Spinbox(root, from_=1, to=10, textvariable=frames_per_page_var).grid(row=3, c
 tk.Checkbutton(root, text="Add space on left side of frames", variable=add_space_var).grid(row=4, column=0, columnspan=3, padx=5, pady=5, sticky=tk.W)
 
 generate_button = tk.Button(root, text="Generate Flipbook", command=generate_flipbook)
-generate_button.grid(row=6, column=0, columnspan=3, pady=10)
+generate_button.grid(row=5, column=0, columnspan=3, pady=10)
 
 # Progress bar
 progress_var = tk.DoubleVar()
@@ -177,7 +189,7 @@ progress_bar.grid_remove()
 
 # Adding a tooltip
 tooltip = ttk.Label(root, text="It may take time to create", background="yellow")
-tooltip.grid_forget()
+tooltip.grid_forget()  
 
 def show_tooltip(event):
     tooltip.grid(row=4, column=0, columnspan=3, pady=5)
