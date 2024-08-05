@@ -6,6 +6,7 @@ from tkinter import filedialog, messagebox, ttk
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
+from reportlab.lib.colors import Color, black, blue, red
 from datetime import datetime
 
 
@@ -44,13 +45,29 @@ def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_nam
     # Add creation date and time to the first frame
     current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
+     # Main title
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(blue)
+    c.drawCentredString(width / 2, height - margin - 50, "Video to Flipbook Creator")
+
+    # Subheadings and details
     c.setFont("Helvetica", 14)
-    c.drawString(margin, height - margin - 20, "Video to Flipbook Creator")
-    c.drawString(margin, height - margin - 40, "Developed by Divesh Adivarekar")
-    c.drawString(margin, height - margin - 60, "https://diveshadivarekar.github.io/")
-    c.drawString(margin, height - margin - 100, f"Flipbook for Video: {video_name}")
-    c.drawString(margin, height - margin - 120, f"Total Frames: {total_frames}")
-    c.drawString(margin, height - margin - 140, f"Created on: {current_datetime}")
+    c.setFillColor(black)
+    c.drawCentredString(width / 2, height - margin - 80, "Developed by Divesh Adivarekar")
+    c.setFillColor(blue)
+    c.drawCentredString(width / 2, height - margin - 110, "https://diveshadivarekar.github.io/")
+    
+    # Line separator
+    c.setStrokeColor(black)
+    c.setLineWidth(0.5)
+    c.line(margin, height - margin - 130, width - margin, height - margin - 130)
+
+    # Video details
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(black)
+    c.drawString(margin, height - margin - 160, f"Flipbook for Video: {video_name}")
+    c.drawString(margin, height - margin - 180, f"Total Frames: {total_frames}")
+    c.drawString(margin, height - margin - 200, f"Created on: {current_datetime}")
     c.showPage()
     
     for i in range(0, len(frames), frames_per_page):
