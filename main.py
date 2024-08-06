@@ -5,6 +5,8 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 import threading
 import os
 import sys
+import subprocess
+import platform
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
@@ -140,7 +142,6 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-
 def get_video_length(video_path):
     vidcap = cv2.VideoCapture(video_path)
     fps = vidcap.get(cv2.CAP_PROP_FPS)
@@ -189,6 +190,9 @@ def generate_flipbook():
     # Run the extraction and PDF creation in a separate thread to avoid freezing the GUI
     threading.Thread(target=process_flipbook, args=(video_path, output_folder, frame_rate, frames_per_page, add_space, image_quality, start_time, end_time, pdf_path, video_file_name_without_ext)).start()
 
+     # Open the output folder
+    open_output_folder(output_folder)
+
 def process_flipbook(video_path, output_folder, frame_rate, frames_per_page, add_space, image_quality, start_time, end_time, pdf_path, video_file_name_without_ext):
     total_frames = extract_frames(video_path, output_folder, frame_rate, image_quality, start_time, end_time, progress_var=progress_var)
     create_pdf_from_frames(output_folder, pdf_path, frames_per_page, video_name=video_file_name_without_ext, total_frames=total_frames, add_space=add_space, progress_var=progress_var)
@@ -196,6 +200,17 @@ def process_flipbook(video_path, output_folder, frame_rate, frames_per_page, add
     progress_var.set(100)
     messagebox.showinfo("Success", f"Flipbook PDF created: {pdf_path}")
     progress_bar.grid_remove()
+
+def open_output_folder(path):
+    # Ensure the path is correctly formatted
+    path = os.path.abspath(path)
+
+    if platform.system() == "Windows":
+        subprocess.Popen(f'explorer "{path}"')
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
 
 # Modern GUI with ttk and menu bar
 root = TkinterDnD.Tk()
