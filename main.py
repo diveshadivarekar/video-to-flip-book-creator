@@ -1,32 +1,49 @@
 import cv2
-import os
-import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+from tkinterdnd2 import DND_FILES, TkinterDnD
+import threading
+import os
+import sys
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from reportlab.lib.colors import Color, black, blue, red
 from datetime import datetime
 
-
-def extract_frames(video_path, output_folder, frame_rate=1, progress_var=None):
+def extract_frames(video_path, output_folder, frame_rate=1, image_quality='high', start_time=0, end_time=None, progress_var=None):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     vidcap = cv2.VideoCapture(video_path)
     total_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(vidcap.get(cv2.CAP_PROP_FPS))
+    duration = total_frames / fps
     success, image = vidcap.read()
     count = 0
 
-    while success:
-        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 / frame_rate))
-        cv2.imwrite(os.path.join(output_folder, f"frame{count:05d}.jpg"), image)
-        success, image = vidcap.read()
-        count += 1
+    quality_params = {
+        'high': [int(cv2.IMWRITE_JPEG_QUALITY), 95],
+        'medium': [int(cv2.IMWRITE_JPEG_QUALITY), 75],
+        'low': [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+    }
 
-        if progress_var:
-            progress_var.set((count / total_frames) * 100)
+    if end_time is None:
+        end_time = duration
+
+    while success:
+        current_time = count / fps
+        if start_time <= current_time <= end_time:
+            vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 / frame_rate))
+            cv2.imwrite(os.path.join(output_folder, f"frame{count:05d}.jpg"), image, quality_params[image_quality])
+            success, image = vidcap.read()
+            count += 1
+
+            if progress_var:
+                progress_var.set((count / total_frames) * 100)
+        else:
+            success, image = vidcap.read()
+            count += 1
 
     vidcap.release()
     return count
@@ -45,7 +62,7 @@ def create_pdf_from_frames(frame_folder, pdf_path, frames_per_page=10, video_nam
     # Add creation date and time to the first frame
     current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-     # Main title
+    # Main title
     c.setFont("Helvetica-Bold", 24)
     c.setFillColor(blue)
     c.drawCentredString(width / 2, height - margin - 50, "Video to Flipbook Creator")
@@ -110,13 +127,36 @@ def delete_images(folder):
         if f.endswith('.jpg'):
             os.remove(os.path.join(folder, f))
 
-def browse_video():
-    file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mov")])
-    video_path_var.set(file_path)
-
 def browse_output_folder():
     folder_path = filedialog.askdirectory()
     output_folder_var.set(folder_path)
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+def get_video_length(video_path):
+    vidcap = cv2.VideoCapture(video_path)
+    fps = vidcap.get(cv2.CAP_PROP_FPS)
+    frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
+    duration = frame_count / fps
+    vidcap.release()
+    return duration
+
+def browse_video():
+    file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mov")])
+    video_path_var.set(file_path)
+    video_length = get_video_length(file_path)
+    end_time_var.set(f"{int(video_length // 3600):02}:{int((video_length % 3600) // 60):02}:{int(video_length % 60):02}")
+
+def time_str_to_seconds(time_str):
+    h, m, s = map(int, time_str.split(":"))
+    return h * 3600 + m * 60 + s
 
 def generate_flipbook():
     video_path = video_path_var.get()
@@ -125,6 +165,9 @@ def generate_flipbook():
     frame_rate = int(frame_rate_var.get())
     frames_per_page = int(frames_per_page_var.get())
     add_space = add_space_var.get()
+    image_quality = image_quality_var.get()
+    start_time = time_str_to_seconds(start_time_var.get())
+    end_time = time_str_to_seconds(end_time_var.get())
 
     # Increment file name if it already exists
     pdf_base_path = os.path.join(output_folder, f"flipbook for [{video_file_name_without_ext}]")
@@ -140,68 +183,64 @@ def generate_flipbook():
 
     progress_bar.grid()
     progress_var.set(0)
-    root.update_idletasks()  
-    total_frames = extract_frames(video_path, output_folder, frame_rate, progress_var=progress_var)
-    create_pdf_from_frames(output_folder, pdf_path, frames_per_page, video_name=video_file_name_without_ext, total_frames=total_frames, add_space=add_space, progress_var=progress_var)
+    root.update_idletasks()
 
+    # Run the extraction and PDF creation in a separate thread to avoid freezing the GUI
+    threading.Thread(target=process_flipbook, args=(video_path, output_folder, frame_rate, frames_per_page, add_space, image_quality, start_time, end_time, pdf_path, video_file_name_without_ext)).start()
+
+def process_flipbook(video_path, output_folder, frame_rate, frames_per_page, add_space, image_quality, start_time, end_time, pdf_path, video_file_name_without_ext):
+    total_frames = extract_frames(video_path, output_folder, frame_rate, image_quality, start_time, end_time, progress_var=progress_var)
+    create_pdf_from_frames(output_folder, pdf_path, frames_per_page, video_name=video_file_name_without_ext, total_frames=total_frames, add_space=add_space, progress_var=progress_var)
     delete_images(output_folder)
-    
     progress_var.set(100)
     messagebox.showinfo("Success", f"Flipbook PDF created: {pdf_path}")
 
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
 # GUI
-root = tk.Tk()
+root = TkinterDnD.Tk()
 root.title("Video to Flipbook Creator")
-root.resizable(False, False) 
-
-try:
-    icon_path = resource_path('icon.ico')
-    root.iconbitmap(icon_path)
-except Exception:
-    pass
-
-try:
-    root.iconbitmap("assets/icon.ico")
-except Exception:
-    pass
+root.resizable(False, False)
 
 video_path_var = tk.StringVar()
 output_folder_var = tk.StringVar()
 frame_rate_var = tk.StringVar(value="1")
 frames_per_page_var = tk.StringVar(value="10")
 add_space_var = tk.BooleanVar(value=True)
+image_quality_var = tk.StringVar(value='high')
+start_time_var = tk.StringVar(value='00:00:00')
+end_time_var = tk.StringVar(value='00:00:00')
 
 tk.Label(root, text="Video File:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=video_path_var, width=50).grid(row=0, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_video).grid(row=0, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Output Folder (preferably empty folder):").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Label(root, text="Output Folder:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=output_folder_var, width=50).grid(row=1, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Frame Rate (frames per second):").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Label(root, text="Frame Rate:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Entry(root, textvariable=frame_rate_var).grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="Frames per Page  (Max 10):").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Label(root, text="Frames per Page:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
 tk.Spinbox(root, from_=1, to=10, textvariable=frames_per_page_var).grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
 
 tk.Checkbutton(root, text="Add space on left side of frames", variable=add_space_var).grid(row=4, column=0, columnspan=3, padx=5, pady=5, sticky=tk.W)
 
+tk.Label(root, text="Image Quality:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+tk.OptionMenu(root, image_quality_var, 'high', 'medium', 'low').grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+
+tk.Label(root, text="Start Time (HH:MM:SS):").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Entry(root, textvariable=start_time_var).grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+
+tk.Label(root, text="End Time (HH:MM:SS):").grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
+tk.Entry(root, textvariable=end_time_var).grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
+
 generate_button = tk.Button(root, text="Generate Flipbook", command=generate_flipbook)
-generate_button.grid(row=5, column=0, columnspan=3, pady=10)
+generate_button.grid(row=8, column=0, columnspan=3, pady=10)
 
 # Progress bar
 progress_var = tk.DoubleVar()
 progress_bar = ttk.Progressbar(root, variable=progress_var, maximum=100)
-progress_bar.grid(row=4, column=0, columnspan=3, padx=5, pady=5)
+progress_bar.grid(row=9, column=0, columnspan=3, padx=5, pady=5)
 progress_bar.grid_remove()
 
 # Adding a tooltip
