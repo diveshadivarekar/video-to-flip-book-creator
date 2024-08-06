@@ -1,3 +1,4 @@
-opencv-python
-reportlab
+opencv-python-headless
 tk
+tkinterdnd2
+reportlab
