@@ -204,8 +204,11 @@ root.geometry("700x380")
 root.resizable(False, False)
 
 style = ttk.Style()
-style.theme_use("clam")
+style.theme_use('xpnative')
 
+# Function to change theme
+def change_theme(theme_name):
+    style.theme_use(theme_name)
 # Menu bar
 menu_bar = tk.Menu(root)
 root.config(menu=menu_bar)
@@ -220,6 +223,16 @@ menu_bar.add_cascade(label="File", menu=file_menu)
 help_menu = tk.Menu(menu_bar, tearoff=0)
 help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Video to Flipbook Creator\nDeveloped by Divesh Adivarekar"))
 menu_bar.add_cascade(label="Help", menu=help_menu)
+
+theme_menu = tk.Menu(menu_bar, tearoff=0)
+theme_menu.add_command(label="Default", command=lambda: change_theme("default"))
+theme_menu.add_command(label="Clam", command=lambda: change_theme("clam"))
+theme_menu.add_command(label="Alt", command=lambda: change_theme("alt"))
+theme_menu.add_command(label="Classic", command=lambda: change_theme("classic"))
+theme_menu.add_command(label="Vista", command=lambda: change_theme("vista"))
+theme_menu.add_command(label="Xpnative", command=lambda: change_theme("xpnative"))
+
+menu_bar.add_cascade(label="Theme", menu=theme_menu)
 
 # Main frame
 main_frame = ttk.Frame(root, padding="10 10 10 10")
