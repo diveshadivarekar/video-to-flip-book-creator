@@ -23,9 +23,10 @@ def extract_frames(video_path, output_folder, frame_rate=1, image_quality='high'
     count = 0
 
     quality_params = {
-        'high': [int(cv2.IMWRITE_JPEG_QUALITY), 95],
-        'medium': [int(cv2.IMWRITE_JPEG_QUALITY), 75],
-        'low': [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+        'Default High': [int(cv2.IMWRITE_JPEG_QUALITY), 95],
+        'High': [int(cv2.IMWRITE_JPEG_QUALITY), 95],
+        'Medium': [int(cv2.IMWRITE_JPEG_QUALITY), 75],
+        'Low': [int(cv2.IMWRITE_JPEG_QUALITY), 50]
     }
 
     if end_time is None:
@@ -194,11 +195,35 @@ def process_flipbook(video_path, output_folder, frame_rate, frames_per_page, add
     delete_images(output_folder)
     progress_var.set(100)
     messagebox.showinfo("Success", f"Flipbook PDF created: {pdf_path}")
+    progress_bar.grid_remove()
 
-# GUI
+# Modern GUI with ttk and menu bar
 root = TkinterDnD.Tk()
 root.title("Video to Flipbook Creator")
+root.geometry("700x380")
 root.resizable(False, False)
+
+style = ttk.Style()
+style.theme_use("clam")
+
+# Menu bar
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
+
+file_menu = tk.Menu(menu_bar, tearoff=0)
+file_menu.add_command(label="Open Video", command=browse_video)
+file_menu.add_command(label="Save Output Folder", command=browse_output_folder)
+file_menu.add_separator()
+file_menu.add_command(label="Exit", command=root.quit)
+menu_bar.add_cascade(label="File", menu=file_menu)
+
+help_menu = tk.Menu(menu_bar, tearoff=0)
+help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Video to Flipbook Creator\nDeveloped by Divesh Adivarekar"))
+menu_bar.add_cascade(label="Help", menu=help_menu)
+
+# Main frame
+main_frame = ttk.Frame(root, padding="10 10 10 10")
+main_frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
 video_path_var = tk.StringVar()
 output_folder_var = tk.StringVar()
@@ -209,42 +234,42 @@ image_quality_var = tk.StringVar(value='high')
 start_time_var = tk.StringVar(value='00:00:00')
 end_time_var = tk.StringVar(value='00:00:00')
 
-tk.Label(root, text="Video File:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=video_path_var, width=50).grid(row=0, column=1, padx=5, pady=5)
-tk.Button(root, text="Browse", command=browse_video).grid(row=0, column=2, padx=5, pady=5)
+ttk.Label(main_frame, text="Video File:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Entry(main_frame, textvariable=video_path_var, width=50).grid(row=0, column=1, padx=5, pady=5)
+ttk.Button(main_frame, text="Browse", command=browse_video).grid(row=0, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Output Folder:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=output_folder_var, width=50).grid(row=1, column=1, padx=5, pady=5)
-tk.Button(root, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=5, pady=5)
+ttk.Label(main_frame, text="Output Folder:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Entry(main_frame, textvariable=output_folder_var, width=50).grid(row=1, column=1, padx=5, pady=5)
+ttk.Button(main_frame, text="Browse", command=browse_output_folder).grid(row=1, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Frame Rate:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=frame_rate_var).grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+ttk.Label(main_frame, text="Frame Rate:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Entry(main_frame, textvariable=frame_rate_var).grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="Frames per Page:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Spinbox(root, from_=1, to=10, textvariable=frames_per_page_var).grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+ttk.Label(main_frame, text="Frames per Page:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Spinbox(main_frame, from_=1, to=10, textvariable=frames_per_page_var).grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Checkbutton(root, text="Add space on left side of frames", variable=add_space_var).grid(row=4, column=0, columnspan=3, padx=5, pady=5, sticky=tk.W)
+ttk.Checkbutton(main_frame, text="Add space on left side of frames", variable=add_space_var).grid(row=4, column=0, columnspan=3, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="Image Quality:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
-tk.OptionMenu(root, image_quality_var, 'high', 'medium', 'low').grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+ttk.Label(main_frame, text="Image Quality:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.OptionMenu(main_frame, image_quality_var, 'Default High','High', 'Medium', 'Low').grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="Start Time (HH:MM:SS):").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=start_time_var).grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+ttk.Label(main_frame, text="Start Time (HH:MM:SS):").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Entry(main_frame, textvariable=start_time_var).grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
 
-tk.Label(root, text="End Time (HH:MM:SS):").grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
-tk.Entry(root, textvariable=end_time_var).grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
+ttk.Label(main_frame, text="End Time (HH:MM:SS):").grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
+ttk.Entry(main_frame, textvariable=end_time_var).grid(row=7, column=1, padx=5, pady=5, sticky=tk.W)
 
-generate_button = tk.Button(root, text="Generate Flipbook", command=generate_flipbook)
+generate_button = ttk.Button(main_frame, text="Generate Flipbook", command=generate_flipbook)
 generate_button.grid(row=8, column=0, columnspan=3, pady=10)
 
 # Progress bar
 progress_var = tk.DoubleVar()
-progress_bar = ttk.Progressbar(root, variable=progress_var, maximum=100)
-progress_bar.grid(row=9, column=0, columnspan=3, padx=5, pady=5)
+progress_bar = ttk.Progressbar(main_frame, variable=progress_var, maximum=100)
+progress_bar.grid(row=8, column=0, columnspan=1, padx=5, pady=5)
 progress_bar.grid_remove()
 
 # Adding a tooltip
-tooltip = ttk.Label(root, text="It may take time to create", background="yellow")
+tooltip = ttk.Label(main_frame, text="It may take time to create", background="yellow")
 tooltip.grid_forget()  
 
 def show_tooltip(event):
