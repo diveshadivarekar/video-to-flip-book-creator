@@ -2,6 +2,8 @@
 
 This project is a simple tool that converts a video file into a flipbook-style PDF document. It allows users to extract frames from a video at a specified frame rate and compile them into a PDF, with a specified number of frames per page.
 
+![output image](output.png)
+
 ## Features
 
 - Extract frames from video files (supports `.mp4`, `.avi`, and `.mov` formats).
