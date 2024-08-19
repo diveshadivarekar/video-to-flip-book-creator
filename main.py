@@ -1,17 +1,22 @@
-import cv2
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
-from tkinterdnd2 import DND_FILES, TkinterDnD
 import threading
 import os
 import sys
 import subprocess
 import platform
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
-from reportlab.lib.colors import Color, black, blue, red
 from datetime import datetime
+try:
+    import cv2
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import cm
+    from reportlab.lib.colors import Color, black, blue, red
+except ImportError:
+    print("Missing required libraries. Please install them using pip: ")
+    print("python -m pip install -r requirements.txt")
+    sys.exit(1)
 
 def extract_frames(video_path, output_folder, frame_rate=1, image_quality='high', start_time=0, end_time=None, progress_var=None):
     if not os.path.exists(output_folder):
@@ -234,6 +239,7 @@ def change_theme(theme_name):
         style.theme_use(theme_name)
     except Exception:
         style.theme_use('default')
+        
 # Menu bar
 menu_bar = tk.Menu(root)
 root.config(menu=menu_bar)
