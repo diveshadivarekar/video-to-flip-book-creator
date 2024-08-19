@@ -151,7 +151,10 @@ def get_video_length(video_path):
     return duration
 
 def browse_video():
-    file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4;*.avi;*.mov")])
+    file_path = filedialog.askopenfilename(
+        title="Select a video file",
+        filetypes=[("MP4 files", "*.mp4"), ("AVI files", "*.avi"), ("MOV files", "*.mov")]
+    )
     video_path_var.set(file_path)
     video_length = get_video_length(file_path)
     end_time_var.set(f"{int(video_length // 3600):02}:{int((video_length % 3600) // 60):02}:{int(video_length % 60):02}")
@@ -219,11 +222,18 @@ root.geometry("700x380")
 root.resizable(False, False)
 
 style = ttk.Style()
-style.theme_use('xpnative')
+try:
+    style.theme_use('xpnative')
+except Exception as e:
+    print(f"Theme error occurred: {e}")
+    style.theme_use('default')
 
 # Function to change theme
 def change_theme(theme_name):
-    style.theme_use(theme_name)
+    try:
+        style.theme_use(theme_name)
+    except Exception:
+        style.theme_use('default')
 # Menu bar
 menu_bar = tk.Menu(root)
 root.config(menu=menu_bar)
